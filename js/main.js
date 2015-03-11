@@ -12,7 +12,10 @@
         mouseY = 0;
 
     var logoModel = null;
+    var meshToon = null;
 
+    var inFullScreen = false;
+    var mouseWheelDelta = 0;
 
     function init() {
 
@@ -32,7 +35,34 @@
             logoModel.position.z = 200;
             logoModel.position.y = -230;
             logoModel.rotation.x = THREE.Math.degToRad(25);
-            scene.add(logoModel);
+            // scene.add(logoModel);
+        });
+
+        var uniforms = {};
+        uniforms.texRef = {
+          "type": "t",
+        };
+
+        var loader2 = new THREE.JSONLoader();
+        loader2.load('models/logo-flat.js', function (geometry, materials) {
+            meshToon = new THREE.Mesh(
+                geometry,
+                new THREE.ShaderMaterial({
+                    "uniforms": uniforms,
+                    "vertexShader": document.getElementById("shader-vertex").text,
+                    "fragmentShader": document.getElementById("shader-fragment-cartoon").text,
+                    "side": THREE.FrontSide,
+                    "transparent": true
+                })
+            );
+
+            var s = 100;
+            meshToon.scale.set(s, s, s);
+            meshToon.position.z = 200;
+            meshToon.position.y = -230;
+            meshToon.rotation.x = THREE.Math.degToRad(25);
+
+            scene.add(meshToon);
         });
 
         var texture = THREE.ImageUtils.loadTexture('textures/cap.png');
@@ -45,7 +75,7 @@
             );
         scene.add(box);
 
-        var ambient = new THREE.AmbientLight(0x444444);
+        var ambient = new THREE.AmbientLight(0x666666);
         scene.add(ambient);
 
         var light = new THREE.DirectionalLight(0xffffff);
@@ -61,7 +91,6 @@
             vrrenderer = new THREE.VRRenderer(renderer, vrHMD);
         }
 
-
         document.addEventListener('mousemove',  onDocumentMouseMove,  false);
         document.addEventListener('mousewheel', onDocumentMouseWheel, false);
         document.body.appendChild(renderer.domElement);
@@ -69,7 +98,6 @@
         //
 
         window.addEventListener('resize', onWindowResize, false);
-
     }
 
     function onWindowResize() {
@@ -88,7 +116,7 @@
 
     function onDocumentMouseWheel(e) {
         e.preventDefault();
-        camera.position.y += e.wheelDelta / 20;
+        mouseWheelDelta += e.wheelDelta / 20;
     }
 
     //
@@ -108,14 +136,22 @@
         // camera.lookAt(scene.position);
         // renderer.render(scene, camera);
         
-        logoModel.rotation.y += 0.008;
+        if (logoModel) {
+            logoModel.rotation.y += 0.008;
+        }
+        if (meshToon) {
+            meshToon.rotation.y += 0.008;
+        }
 
-        if (vrHMDSensor) {
+        if (inFullScreen) {
             var state = vrHMDSensor.getState();
             camera.quaternion.set(state.orientation.x, 
                                   state.orientation.y, 
                                   state.orientation.z, 
                                   state.orientation.w);
+            camera.position.set(state.position.x,
+                                state.position.y + mouseWheelDelta,
+                                state.position.z * 500 + 800);
             vrrenderer.render(scene, camera);
         }
         else {
@@ -147,18 +183,23 @@
 
     window.addEventListener('keypress', function(e) {
         camera = new THREE.PerspectiveCamera(75, SCREEN_WIDTH / SCREEN_HEIGHT, 0.1, 10000);
-        camera.position.z = 400;
+        camera.position.z = 600;
 
         if (e.charCode == 'f'.charCodeAt(0)) {
             if (renderer.domElement.mozRequestFullScreen) {
+                inFullScreen = true;
                 renderer.domElement.mozRequestFullScreen({
                     vrDisplay: vrHMD
                 });
             }
             else if (renderer.domElement.webkitRequestFullscreen) {
+                inFullScreen = true;
                 renderer.domElement.webkitRequestFullscreen({
                     vrDisplay: vrHMD,
                 });
+            }
+            else {
+                inFullScreen = false;
             }
         }
 

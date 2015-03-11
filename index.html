@@ -16,6 +16,67 @@ img, canvas {
 </head>
 <body>
 
+<script id="shader-vertex" type="x-shader/x-vertex">precision mediump float;
+uniform float t;
+
+varying vec3 vNormal;
+
+void main() {
+  vNormal = normal;
+  gl_Position = projectionMatrix *
+                modelViewMatrix *
+                vec4(position, 1.0);
+}
+</script>
+<script id="shader-vertex-cartoon-edge" type="x-shader/x-vertex">precision mediump float;
+
+void main() {
+  gl_Position = projectionMatrix *
+                modelViewMatrix *
+                vec4(position + normal * 0.026, 1.0);
+}
+</script>
+
+<script id="shader-fragment-cartoon" type="x-shader/x-fragment">precision mediump float;
+#define STEP 0.5
+#define TAU 3.1415926535897932 * 2.0
+
+uniform float t;
+varying vec3 vNormal;
+
+void main() {
+  vec3 color = vec3(1.0, 1.0, 1.0);
+  vec3 colorTop = vec3(0.8, 0.8, 0.8);
+  vec3 colorSide1 = vec3(1.0, 1.0, 1.0);
+  vec3 colorSide2 = vec3(0.8, 0.8, 0.8);
+  vec3 invLight = normalize(vec3(cos(t*TAU), sin(t*TAU), 0.9));
+  color *= dot(vNormal, invLight);
+
+  float intensyTop = abs(dot(vNormal, vec3(0., 1., 0.)));
+  float intensySide1 = abs(dot(vNormal, vec3(0., 0., 1.)));
+  float intensySide2 = abs(dot(vNormal, vec3(1., 0., 0.)));
+
+  if(intensyTop > intensySide1){
+    if(intensyTop > intensySide2){
+      gl_FragColor = vec4(colorTop, 1.0);
+    }else{
+      gl_FragColor = vec4(colorSide2, 1.0);
+    }
+  }else if(intensySide1 > intensySide2){
+    gl_FragColor = vec4(colorSide1, 1.0);
+  }else{
+    gl_FragColor = vec4(colorSide2, 1.0);
+  }
+  //gl_FragColor = vec4(color, 1.0);
+}
+</script>
+
+<script id="shader-fragment-cartoon-edge" type="x-shader/x-fragment">precision mediump float;
+void main() {
+  gl_FragColor = vec4(0.,0.,0.,1.);
+}
+</script>
+
 <script src="js/three.min.js"></script>
 <script src="js/VRRenderer.js"></script>
 <script src="js/main.js"></script>
