@@ -11,6 +11,8 @@
     var mouseX = 0,
         mouseY = 0;
 
+    var logoModel = null;
+
 
     function init() {
 
@@ -21,25 +23,30 @@
         scene.fog = new THREE.FogExp2(0x01131D, 0.001);
 
         var loader = new THREE.JSONLoader();
-        var url = 'models/webgl-logo.js';
+        var url = 'models/logo.js';
         loader.load(url, function (geometry, materials) {
             var mat = new THREE.MeshFaceMaterial(materials);
-            var mesh = new THREE.Mesh(geometry, mat);
-            var s = 200;
-            mesh.scale.set(s, s, s);
-            mesh.rotation.x = Math.PI / 2;
-            scene.add(mesh);
+            logoModel = new THREE.Mesh(geometry, mat);
+            var s = 100;
+            logoModel.scale.set(s, s, s);
+            logoModel.position.z = 200;
+            logoModel.position.y = -230;
+            logoModel.rotation.x = THREE.Math.degToRad(25);
+            scene.add(logoModel);
         });
 
         var texture = THREE.ImageUtils.loadTexture('textures/cap.png');
         var box = new THREE.Mesh(
-                new THREE.BoxGeometry(800, 1000, 20),
+                new THREE.BoxGeometry(1024, 1024, 10),
                 new THREE.MeshLambertMaterial({
                     color: 0xffffff,
                     map: texture
                 })
             );
         scene.add(box);
+
+        var ambient = new THREE.AmbientLight(0x444444);
+        scene.add(ambient);
 
         var light = new THREE.DirectionalLight(0xffffff);
         light.position.set(100, 100, 100);
@@ -81,7 +88,7 @@
 
     function onDocumentMouseWheel(e) {
         e.preventDefault();
-        camera.position.y += e.wheelDelta / 50;
+        camera.position.y += e.wheelDelta / 20;
     }
 
     //
@@ -101,6 +108,8 @@
         // camera.lookAt(scene.position);
         // renderer.render(scene, camera);
         
+        logoModel.rotation.y += 0.008;
+
         if (vrHMDSensor) {
             var state = vrHMDSensor.getState();
             camera.quaternion.set(state.orientation.x, 
