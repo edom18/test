@@ -135,6 +135,8 @@
 
         // camera.lookAt(scene.position);
         // renderer.render(scene, camera);
+
+        camera.position.y = mouseWheelDelta;
         
         if (logoModel) {
             logoModel.rotation.y += 0.008;
